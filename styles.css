@@ -1,0 +1,23 @@
+body {
+    padding-top: 20px;
+}
+
+.section {
+    margin-bottom: 30px;
+}
+
+.form-label {
+    font-weight: bold;
+}
+
+.input-group-text {
+    width: 120px;
+}
+
+#customStatus {
+    margin-top: 10px;
+}
+
+.btn {
+    margin-right: 10px;
+}
