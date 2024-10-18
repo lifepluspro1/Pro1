@@ -7,6 +7,39 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Add these if you don't already have them -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Add these styles for better table responsiveness */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Style for the search section */
+        #tripHistorySearch {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Style for the modal */
+        .modal-lg {
+            max-width: 800px;
+        }
+
+        /* Responsive table styles */
+        @media (max-width: 768px) {
+            .table td, .table th {
+                min-width: 100px;
+            }
+            .table td:last-child, .table th:last-child {
+                min-width: 120px;
+            }
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -199,35 +232,7 @@
             <h2>Data Analytics</h2>
             <div class="row">
                 <div class="col-md-12">
-                    <h3>Trip History</h3>
-                    <div class="mb-3">
-                        <input type="text" class="form-control" id="tripSearch" placeholder="Search trips...">
-                    </div>
-                    <div id="tripHistorySearch" class="container">
-    <input type="text" class="form-control" id="tripSearch" placeholder="Search trips...">
-</div>
-
-<div class="table-responsive">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Patient Name</th>
-                <th>Status</th>
-                <th>Origin</th>
-                <th>Destination</th>
-                <th>Driver</th>
-                <th>Nursing Staff</th>
-                <th>Total Distance</th>
-                <th>Total Charge</th>
-                <th>Expenses</th>
-            </tr>
-        </thead>
-        <tbody id="tripHistoryBody">
-            <!-- Dynamic rows will be inserted here -->
-        </tbody>
-    </table>
-</div>
+                    
 
 <!-- Optional Modal for Detailed View -->
 <div class="modal fade" id="tripDetailsModal" tabindex="-1" aria-labelledby="tripDetailsModalLabel" aria-hidden="true">
@@ -253,7 +258,28 @@
                     <canvas id="tripFrequencyChart"></canvas>
                 </div>
             </div>
-            <div class="row mt-4">
+     <!-- Replace your existing trip history section with this code -->
+<div id="tripHistory" class="section" style="display: none;">
+    <div class="container mt-4">
+        <h2>Trip History</h2>
+        
+        <!-- Search Section -->
+        <div id="tripHistorySearch" class="mb-4">
+            <!-- Search controls will be dynamically inserted here by JavaScript -->
+        </div>
+
+        <!-- Trip History Table -->
+        <div class="table-responsive">
+            <div id="tripHistoryTable">
+                <!-- Table will be dynamically inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this to the end of your body tag, before your other script tags -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>       <div class="row mt-4">
                 <div class="col-md-6">
                     <h3>Ambulance Usage Heatmap</h3>
                     <div id="ambulanceHeatmap"></div>
