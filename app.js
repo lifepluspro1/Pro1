@@ -3,7 +3,7 @@ let trips = [];
 let canceledTrips = [];
 
 // Function to show/hide sections
-function toggleSection(sectionId) {
+function showSection(sectionId) {
     document.querySelectorAll('.section').forEach(section => {
         section.style.display = 'none';
     });
@@ -11,8 +11,8 @@ function toggleSection(sectionId) {
 }
 
 // Function to handle form submission
-document.getElementById('tripForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+document.getElementById('tripForm').addEventListener('submit', function(e) {
+    e.preventDefault();
     const trip = {
         patientName: document.getElementById('patientName').value,
         patientStatus: document.getElementById('patientStatus').value,
@@ -22,16 +22,16 @@ document.getElementById('tripForm').addEventListener('submit', function(event) {
         driver: document.getElementById('driver').value,
         nursingStaff: document.getElementById('nursingStaff').value,
         ambulance: document.getElementById('ambulance').value,
-        distance: parseFloat(document.getElementById('distance').value) || 0,
-        charge: parseFloat(document.getElementById('charge').value) || 0,
+        distance: parseFloat(document.getElementById('distance').value),
+        charge: parseFloat(document.getElementById('charge').value),
         totalCharge: parseFloat(document.getElementById('totalCharge').value),
         paymentType: document.getElementById('paymentType').value,
         expenses: {
-            driver: parseFloat(document.getElementById('driverExpense').value) || 0,
-            fuel: parseFloat(document.getElementById('fuelExpense').value) || 0,
-            maintenance: parseFloat(document.getElementById('maintenanceExpense').value) || 0,
-            nursingStaff: parseFloat(document.getElementById('nursingStaffExpense').value) || 0,
-            misc: parseFloat(document.getElementById('miscExpense').value) || 0
+            driver: parseFloat(document.getElementById('driverExpense').value),
+            fuel: parseFloat(document.getElementById('fuelExpense').value),
+            maintenance: parseFloat(document.getElementById('maintenanceExpense').value),
+            nursingStaff: parseFloat(document.getElementById('nursingStaffExpense').value),
+            misc: parseFloat(document.getElementById('miscExpense').value)
         },
         totalExpenses: parseFloat(document.getElementById('totalExpenses').value),
         date: new Date().toISOString()
@@ -40,8 +40,6 @@ document.getElementById('tripForm').addEventListener('submit', function(event) {
     saveTrips();
     this.reset();
     alert('Trip recorded successfully!');
-    updateDashboard();
-    updateTripHistory();
 });
 
 // Function to cancel a trip
@@ -61,17 +59,11 @@ function cancelTrip() {
 // Function to calculate total charge
 document.getElementById('distance').addEventListener('input', calculateTotalCharge);
 document.getElementById('charge').addEventListener('input', calculateTotalCharge);
-document.getElementById('totalCharge').addEventListener('input', calculateTotalCharge);
 
 function calculateTotalCharge() {
     const distance = parseFloat(document.getElementById('distance').value) || 0;
     const charge = parseFloat(document.getElementById('charge').value) || 0;
-    let totalCharge = parseFloat(document.getElementById('totalCharge').value) || 0;
-    
-    if (distance && charge) {
-        totalCharge = distance * charge;
-    }
-    
+    const totalCharge = distance * charge;
     document.getElementById('totalCharge').value = totalCharge.toFixed(2);
 }
 
@@ -110,6 +102,9 @@ function loadTrips() {
     }
 }
 
+// Load trips when the page loads
+loadTrips();
+
 // Show/hide custom status input based on selection
 document.getElementById('patientStatus').addEventListener('change', function() {
     const customStatusInput = document.getElementById('customStatus');
@@ -122,42 +117,35 @@ document.getElementById('patientStatus').addEventListener('change', function() {
     }
 });
 
-// Financial Analysis Functions and other functions remain unchanged...
+// Initialize the page by showing the Trip Recording section
+showSection('tripRecording');
+// ... (previous code remains the same) ...
+
 // Financial Analysis Functions
 function generateFinancialAnalysis() {
     const timeFrame = document.getElementById('analysisTimeFrame').value;
-    let startDate, endDate;
-
-    if (timeFrame === 'custom') {
-        startDate = new Date(document.getElementById('startDate').value);
-        endDate = new Date(document.getElementById('endDate').value);
-    } else {
-        [startDate, endDate] = getDateRange(timeFrame);
-    }
-
-    const filteredTrips = filterTripsByDateRange(trips, startDate, endDate);
+    const filteredTrips = filterTripsByTimeFrame(trips, timeFrame);
+    
     const totalRevenue = filteredTrips.reduce((sum, trip) => sum + trip.totalCharge, 0);
     const totalExpenses = filteredTrips.reduce((sum, trip) => sum + trip.totalExpenses, 0);
     const netProfit = totalRevenue - totalExpenses;
 
     const summaryHtml = `
-        <p><strong>Total Revenue:</strong> ₹${totalRevenue.toFixed(2)}</p>
-        <p><strong>Total Expenses:</strong> ₹${totalExpenses.toFixed(2)}</p>
-        <p><strong>Net Profit:</strong> ₹${netProfit.toFixed(2)}</p>
+        <p><strong>Total Revenue:</strong> $${totalRevenue.toFixed(2)}</p>
+        <p><strong>Total Expenses:</strong> $${totalExpenses.toFixed(2)}</p>
+        <p><strong>Net Profit:</strong> $${netProfit.toFixed(2)}</p>
     `;
     document.getElementById('financialSummary').innerHTML = summaryHtml;
 
     generateExpenditureChart(filteredTrips);
     generateCostRevenueChart(filteredTrips);
-    generateProfitabilityChart(filteredTrips);
-    generateExpenseTrendChart(filteredTrips);
 }
 
-function getDateRange(timeFrame) {
+function filterTripsByTimeFrame(trips, timeFrame) {
     const now = new Date();
     const startDate = new Date();
 
-    switch (timeFrame) {
+    switch(timeFrame) {
         case 'daily':
             startDate.setDate(now.getDate() - 1);
             break;
@@ -172,17 +160,9 @@ function getDateRange(timeFrame) {
             break;
     }
 
-    return [startDate, now];
+    return trips.filter(trip => new Date(trip.date) >= startDate);
 }
 
-function filterTripsByDateRange(trips, startDate, endDate) {
-    return trips.filter(trip => {
-        const tripDate = new Date(trip.date);
-        return tripDate >= startDate && tripDate <= endDate;
-    });
-}
-
-// Chart generation functions
 function generateExpenditureChart(trips) {
     const ctx = document.getElementById('expenditureChart').getContext('2d');
     const expenseCategories = ['driver', 'fuel', 'maintenance', 'nursingStaff', 'misc'];
@@ -241,7 +221,7 @@ function generateCostRevenueChart(trips) {
                     display: true,
                     title: {
                         display: true,
-                        text: 'Amount (₹)'
+                        text: 'Amount ($)'
                     }
                 }
             }
@@ -249,274 +229,202 @@ function generateCostRevenueChart(trips) {
     });
 }
 
-function generateProfitabilityChart(trips) {
-    const ctx = document.getElementById('profitabilityChart').getContext('2d');
-    const labels = trips.map(trip => new Date(trip.date).toLocaleDateString());
-    const profits = trips.map(trip => trip.totalCharge - trip.totalExpenses);
+function calculateRevenueDistribution() {
+    const allocationPercentage = parseFloat(document.getElementById('revenueAllocation').value);
+    const totalRevenue = trips.reduce((sum, trip) => sum + trip.totalCharge, 0);
+    const allocatedAmount = totalRevenue * (allocationPercentage / 100);
+    const remainingAmount = totalRevenue - allocatedAmount;
+
+    const resultHtml = `
+        <p><strong>Total Revenue:</strong> $${totalRevenue.toFixed(2)}</p>
+        <p><strong>Allocated Amount (${allocationPercentage}%):</strong> $${allocatedAmount.toFixed(2)}</p>
+        <p><strong>Remaining Amount:</strong> $${remainingAmount.toFixed(2)}</p>
+    `;
+    document.getElementById('revenueDistributionResult').innerHTML = resultHtml;
+}
+
+// Data Analytics Functions
+function updateTripHistory() {
+    const searchTerm = document.getElementById('tripSearch').value.toLowerCase();
+    const filteredTrips = trips.filter(trip => 
+        trip.patientName.toLowerCase().includes(searchTerm) ||
+        trip.origin.toLowerCase().includes(searchTerm) ||
+        trip.destination.toLowerCase().includes(searchTerm)
+    );
+
+    const tableHtml = `
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Total Charge</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${filteredTrips.map(trip => `
+                    <tr>
+                        <td>${new Date(trip.date).toLocaleDateString()}</td>
+                        <td>${trip.patientName}</td>
+                        <td>${trip.origin}</td>
+                        <td>${trip.destination}</td>
+                        <td>$${trip.totalCharge.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('tripHistoryTable').innerHTML = tableHtml;
+}
+
+function generatePatientDemographicsChart() {
+    const ctx = document.getElementById('patientDemographicsChart').getContext('2d');
+    const statusCounts = trips.reduce((counts, trip) => {
+        counts[trip.patientStatus] = (counts[trip.patientStatus] || 0) + 1;
+        return counts;
+    }, {});
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(statusCounts),
+            datasets: [{
+                data: Object.values(statusCounts),
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']
+            }]
+        }
+    });
+}
+
+function generateTripFrequencyChart() {
+    const ctx = document.getElementById('tripFrequencyChart').getContext('2d');
+    const tripDates = trips.map(trip => new Date(trip.date).toLocaleDateString());
+    const tripCounts = tripDates.reduce((counts, date) => {
+        counts[date] = (counts[date] || 0) + 1;
+        return counts;
+    }, {});
 
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels: Object.keys(tripCounts),
             datasets: [{
-                label: 'Profit',
-                data: profits,
-                backgroundColor: profits.map(profit => profit >= 0 ? '#4BC0C0' : '#FF6384')
+                label: 'Number of Trips',
+                data: Object.values(tripCounts),
+                backgroundColor: '#36A2EB'
             }]
         },
         options: {
-            responsive: true,
             scales: {
-                x: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Date'
-                    }
-                },
                 y: {
-                    display: true,
+                    beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Profit (₹)'
+                        text: 'Number of Trips'
                     }
                 }
             }
         }
     });
-}
-
-function generateExpenseTrendChart(trips) {
-    const ctx = document.getElementById('expenseTrendChart').getContext('2d');
-    const labels = trips.map(trip => new Date(trip.date).toLocaleDateString());
-    const expenseCategories = ['driver', 'fuel', 'maintenance', 'nursingStaff', 'misc'];
-    const datasets = expenseCategories.map(category => ({
-        label: category.charAt(0).toUpperCase() + category.slice(1),
-        data: trips.map(trip => trip.expenses[category]),
-        borderColor: getRandomColor(),
-        fill: false
-    }));
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: datasets
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Date'
-                    }
-                },
-                y: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Expense (₹)'
-                    }
-                }
-            }
-        }
-    });
-}
-
-function getRandomColor() {
-    return '#' + Math.floor(Math.random()*16777215).toString(16);
 }
 
 // Dashboard Functions
 function updateDashboard() {
-    document.getElementById('totalTripsCount').textContent = trips.length;
-
+    const totalTrips = trips.length;
     const totalRevenue = trips.reduce((sum, trip) => sum + trip.totalCharge, 0);
-    document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toFixed(2)}`;
-
     const totalExpenses = trips.reduce((sum, trip) => sum + trip.totalExpenses, 0);
-    document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toFixed(2)}`;
-
     const netProfit = totalRevenue - totalExpenses;
-    document.getElementById('netProfit').textContent = `₹${netProfit.toFixed(2)}`;
+
+    document.getElementById('totalTripsCount').textContent = totalTrips;
+    document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+    document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
+    document.getElementById('netProfit').textContent = `$${netProfit.toFixed(2)}`;
 
     generateRevenueTrendChart();
     generateAmbulanceUtilizationChart();
-    generatePatientStatusChart();
-    generatePaymentTypeChart();
 }
 
-// Report Functions
-function generateReport() {
-    const reportType = document.getElementById('reportType').value;
-    const timeFrame = document.getElementById('reportTimeFrame').value;
-    let startDate, endDate;
-
-    if (timeFrame === 'custom') {
-        startDate = new Date(document.getElementById('reportStartDate').value);
-        endDate = new Date(document.getElementById('reportEndDate').value);
-    } else {
-        [startDate, endDate] = getDateRange(timeFrame);
-    }
-
-    const filteredTrips = filterTripsByDateRange(trips, startDate, endDate);
-
-    let reportContent = '';
-    switch (reportType) {
-        case 'financial':
-            reportContent = generateFinancialReport(filteredTrips);
-            break;
-        case 'operational':
-            reportContent = generateOperationalReport(filteredTrips);
-            break;
-        case 'performance':
-            reportContent = generatePerformanceReport(filteredTrips);
-            break;
-    }
-
-    document.getElementById('reportContent').innerHTML = reportContent;
-}
-
-// Financial, operational, and performance report generation
-function generateFinancialReport(trips) {
-    const totalRevenue = trips.reduce((sum, trip) => sum + trip.totalCharge, 0);
-    const totalExpenses = trips.reduce((sum, trip) => sum + trip.totalExpenses, 0);
-    const netProfit = totalRevenue - totalExpenses;
-
-    return `
-        <h3>Financial Report</h3>
-        <p><strong>Total Revenue:</strong> ₹${totalRevenue.toFixed(2)}</p>
-        <p><strong>Total Expenses:</strong> ₹${totalExpenses.toFixed(2)}</p>
-        <p><strong>Net Profit:</strong> ₹${netProfit.toFixed(2)}</p>
-        <p><strong>Profit Margin:</strong> ${((netProfit / totalRevenue) * 100).toFixed(2)}%</p>
-    `;
-}
-
-function generateOperationalReport(trips) {
-    const totalTrips = trips.length;
-    const averageDistance = trips.reduce((sum, trip) => sum + trip.distance, 0) / totalTrips;
-    const ambulanceUtilization = trips.reduce((counts, trip) => {
-        counts[trip.ambulance] = (counts[trip.ambulance] || 0) + 1;
-        return counts;
+function generateRevenueTrendChart() {
+    const ctx = document.getElementById('revenueTrendChart').getContext('2d');
+    const monthlyRevenue = trips.reduce((revenue, trip) => {
+        const month = new Date(trip.date).toLocaleString('default', { month: 'short' });
+        revenue[month] = (revenue[month] || 0) + trip.totalCharge;
+        return revenue;
     }, {});
 
-    return `
-        <h3>Operational Report</h3>
-        <p><strong>Total Trips:</strong> ${totalTrips}</p>
-        <p><strong>Average Distance per Trip:</strong> ${averageDistance.toFixed(2)} km</p>
-        <h4>Ambulance Utilization:</h4>
-        <ul>
-            ${Object.entries(ambulanceUtilization).map(([ambulance, count]) => 
-                `<li>Ambulance ${ambulance}: ${count} trips</li>`
-            ).join('')}
-        </ul>
-    `;
-}
-
-function generatePerformanceReport(trips) {
-    const totalTrips = trips.length;
-    const averageRevenue = trips.reduce((sum, trip) => sum + trip.totalCharge, 0) / totalTrips;
-    const averageExpenses = trips.reduce((sum, trip) => sum + trip.totalExpenses, 0) / totalTrips;
-    const profitableTrips = trips.filter(trip => trip.totalCharge > trip.totalExpenses).length;
-
-    return `
-        <h3>Performance Report</h3>
-        <p><strong>Total Trips:</strong> ${totalTrips}</p>
-        <p><strong>Average Revenue per Trip:</strong> ₹${averageRevenue.toFixed(2)}</p>
-        <p><strong>Average Expenses per Trip:</strong> ₹${averageExpenses.toFixed(2)}</p>
-        <p><strong>Profitable Trips:</strong> ${profitableTrips} (${((profitableTrips / totalTrips) * 100).toFixed(2)}%)</p>
-    `;
-}
-
-// Download data as CSV, JSON, or Excel
-function downloadAllData(format) {
-    let data;
-    let fileName;
-    let mimeType;
-
-    switch(format) {
-        case 'csv':
-            data = convertToCSV(trips);
-            fileName = 'ambulance_trips.csv';
-            mimeType = 'text/csv;charset=utf-8;';
-            break;
-        case 'json':
-            data = JSON.stringify(trips, null, 2);
-            fileName = 'ambulance_trips.json';
-            mimeType = 'application/json;charset=utf-8;';
-            break;
-        case 'excel':
-            data = convertToExcel(trips);
-            fileName = 'ambulance_trips.xlsx';
-            mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            break;
-    }
-
-    const blob = new Blob([data], { type: mimeType });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    link.click();
-}
-
-function convertToCSV(trips) {
-    const headers = Object.keys(trips[0]).filter(key => key !== 'expenses');
-    const expenseHeaders = Object.keys(trips[0].expenses);
-    const allHeaders = [...headers, ...expenseHeaders.map(eh => `expense_${eh}`)];
-
-    let csv = allHeaders.join(',') + '\n';
-
-    for (const trip of trips) {
-        const row = headers.map(header => {
-            if (header === 'date') {
-                return new Date(trip[header]).toLocaleDateString();
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Object.keys(monthlyRevenue),
+            datasets: [{
+                label: 'Monthly Revenue',
+                data: Object.values(monthlyRevenue),
+                borderColor: '#36A2EB',
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Revenue ($)'
+                    }
+                }
             }
-            return trip[header];
-        });
-        expenseHeaders.forEach(eh => row.push(trip.expenses[eh]));
-        csv += row.join(',') + '\n';
-    }
-
-    return csv;
+        }
+    });
 }
 
-function convertToExcel(trips) {
-    const worksheet = XLSX.utils.json_to_sheet(trips.map(trip => ({
-        ...trip,
-        date: new Date(trip.date).toLocaleDateString(),
-        ...Object.entries(trip.expenses).reduce((acc, [key, value]) => {
-            acc[`expense_${key}`] = value;
-            return acc;
-        }, {})
-    })));
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Trips");
-    return XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+// ... (previous code remains the same) ...
+
+function generateAmbulanceUtilizationChart() {
+    const ctx = document.getElementById('ambulanceUtilizationChart').getContext('2d');
+    const ambulanceUsage = trips.reduce((usage, trip) => {
+        usage[trip.ambulance] = (usage[trip.ambulance] || 0) + 1;
+        return usage;
+    }, {});
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(ambulanceUsage),
+            datasets: [{
+                label: 'Number of Trips',
+                data: Object.values(ambulanceUsage),
+                backgroundColor: '#4BC0C0'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Number of Trips'
+                    }
+                }
+            }
+        }
+    });
 }
 
-// Initialize the application
-window.addEventListener('load', () => {
+// Event listeners for new features
+document.getElementById('tripSearch').addEventListener('input', updateTripHistory);
+document.getElementById('analysisTimeFrame').addEventListener('change', generateFinancialAnalysis);
+
+// Function to initialize all charts and data
+function initializeApp() {
     loadTrips();
-    updateDashboard();
     updateTripHistory();
+    generateFinancialAnalysis();
     generatePatientDemographicsChart();
     generateTripFrequencyChart();
+    updateDashboard();
+}
 
-    // Initialize date pickers
-    flatpickr("#startDate", {});
-    flatpickr("#endDate", {});
-    flatpickr("#reportStartDate", {});
-    flatpickr("#reportEndDate", {});
-
-    document.getElementById('analysisTimeFrame').addEventListener('change', function() {
-        const customDateRange = document.getElementById('customDateRange');
-        customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
-    });
-
-    document.getElementById('reportTimeFrame').addEventListener('change', function() {
-        const reportCustomDateRange = document.getElementById('reportCustomDateRange');
-        reportCustomDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
-    });
-});
+// Call initializeApp when the page loads
+window.addEventListener('load', initializeApp);
