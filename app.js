@@ -3,7 +3,7 @@ let trips = [];
 let canceledTrips = [];
 
 // Function to show/hide sections
-function showSection(sectionId) {
+function toggleSection(sectionId) {
     document.querySelectorAll('.section').forEach(section => {
         section.style.display = 'none';
     });
@@ -11,8 +11,8 @@ function showSection(sectionId) {
 }
 
 // Function to handle form submission
-document.getElementById('tripForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+document.getElementById('tripForm').addEventListener('submit', function(event) {
+    event.preventDefault();
     const trip = {
         patientName: document.getElementById('patientName').value,
         patientStatus: document.getElementById('patientStatus').value,
@@ -122,20 +122,20 @@ document.getElementById('patientStatus').addEventListener('change', function() {
     }
 });
 
+// Financial Analysis Functions and other functions remain unchanged...
 // Financial Analysis Functions
 function generateFinancialAnalysis() {
     const timeFrame = document.getElementById('analysisTimeFrame').value;
     let startDate, endDate;
-    
+
     if (timeFrame === 'custom') {
         startDate = new Date(document.getElementById('startDate').value);
         endDate = new Date(document.getElementById('endDate').value);
     } else {
         [startDate, endDate] = getDateRange(timeFrame);
     }
-    
+
     const filteredTrips = filterTripsByDateRange(trips, startDate, endDate);
-    
     const totalRevenue = filteredTrips.reduce((sum, trip) => sum + trip.totalCharge, 0);
     const totalExpenses = filteredTrips.reduce((sum, trip) => sum + trip.totalExpenses, 0);
     const netProfit = totalRevenue - totalExpenses;
@@ -156,8 +156,8 @@ function generateFinancialAnalysis() {
 function getDateRange(timeFrame) {
     const now = new Date();
     const startDate = new Date();
-    
-    switch(timeFrame) {
+
+    switch (timeFrame) {
         case 'daily':
             startDate.setDate(now.getDate() - 1);
             break;
@@ -171,7 +171,7 @@ function getDateRange(timeFrame) {
             startDate.setFullYear(now.getFullYear() - 1);
             break;
     }
-    
+
     return [startDate, now];
 }
 
@@ -182,6 +182,7 @@ function filterTripsByDateRange(trips, startDate, endDate) {
     });
 }
 
+// Chart generation functions
 function generateExpenditureChart(trips) {
     const ctx = document.getElementById('expenditureChart').getContext('2d');
     const expenseCategories = ['driver', 'fuel', 'maintenance', 'nursingStaff', 'misc'];
@@ -328,233 +329,16 @@ function getRandomColor() {
     return '#' + Math.floor(Math.random()*16777215).toString(16);
 }
 
-function calculateRevenueDistribution() {
-    const allocation = parseFloat(document.getElementById('revenueAllocation').value) / 100;
-    const totalRevenue = trips.reduce((sum, trip) => sum + trip.totalCharge, 0);
-    const distributedAmount = totalRevenue * allocation;
-    const remainingAmount = totalRevenue - distributedAmount;
-
-    const resultHtml = `
-        <p><strong>Total Revenue:</strong> ₹${totalRevenue.toFixed(2)}</p>
-        <p><strong>Distributed Amount (${(allocation * 100).toFixed(2)}%):</strong> ₹${distributedAmount.toFixed(2)}</p>
-        <p><strong>Remaining Amount:</strong> ₹${remainingAmount.toFixed(2)}</p>
-    `;
-    document.getElementById('revenueDistributionResult').innerHTML = resultHtml;
-}
-
-// Data Analytics Functions
-// Add these new functions
-
-function showTripDetails(tripIndex) {
-  const trip = trips[tripIndex];
-  const detailsHtml = `
-    <div class="modal fade" id="tripDetailsModal${tripIndex}" tabindex="-1">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Trip Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <div class="row">
-              <div class="col-md-6">
-                <p><strong>Date:</strong> ${new Date(trip.date).toLocaleDateString()}</p>
-                <p><strong>Patient Name:</strong> ${trip.patientName}</p>
-                <p><strong>Patient Status:</strong> ${trip.patientStatus}</p>
-                <p><strong>Origin:</strong> ${trip.origin}</p>
-                <p><strong>Destination:</strong> ${trip.destination}</p>
-                <p><strong>Distance:</strong> ${trip.distance} km</p>
-              </div>
-              <div class="col-md-6">
-                <p><strong>Driver:</strong> ${trip.driver}</p>
-                <p><strong>Nursing Staff:</strong> ${trip.nursingStaff}</p>
-                <p><strong>Ambulance:</strong> ${trip.ambulance}</p>
-                <p><strong>Payment Type:</strong> ${trip.paymentType}</p>
-                <p><strong>Total Charge:</strong> ₹${trip.totalCharge.toFixed(2)}</p>
-              </div>
-            </div>
-            <div class="mt-3">
-              <h6>Expenses</h6>
-              <ul class="list-unstyled">
-                <li>Driver: ₹${trip.expenses.driver.toFixed(2)}</li>
-                <li>Fuel: ₹${trip.expenses.fuel.toFixed(2)}</li>
-                <li>Maintenance: ₹${trip.expenses.maintenance.toFixed(2)}</li>
-                <li>Nursing Staff: ₹${trip.expenses.nursingStaff.toFixed(2)}</li>
-                <li>Miscellaneous: ₹${trip.expenses.misc.toFixed(2)}</li>
-                <li><strong>Total Expenses:</strong> ₹${trip.totalExpenses.toFixed(2)}</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  
-  // Add modal to document if it doesn't exist
-  if (!document.getElementById(`tripDetailsModal${tripIndex}`)) {
-    document.body.insertAdjacentHTML('beforeend', detailsHtml);
-  }
-  
-  // Show the modal
-  const modal = new bootstrap.Modal(document.getElementById(`tripDetailsModal${tripIndex}`));
-  modal.show();
-}
-
-function searchTrips() {
-  const searchTerm = document.getElementById('tripSearch').value.toLowerCase();
-  const searchType = document.getElementById('searchType').value;
-  
-  const filteredTrips = trips.filter(trip => {
-    switch(searchType) {
-      case 'patientName':
-        return trip.patientName.toLowerCase().includes(searchTerm);
-      case 'ambulance':
-        return trip.ambulance.toLowerCase().includes(searchTerm);
-      case 'driver':
-        return trip.driver.toLowerCase().includes(searchTerm);
-      case 'nursingStaff':
-        return trip.nursingStaff.toLowerCase().includes(searchTerm);
-      case 'origin':
-        return trip.origin.toLowerCase().includes(searchTerm);
-      case 'destination':
-        return trip.destination.toLowerCase().includes(searchTerm);
-      case 'date':
-        return new Date(trip.date).toLocaleDateString().includes(searchTerm);
-      case 'all':
-        return Object.values(trip).some(value => 
-          String(value).toLowerCase().includes(searchTerm)
-        );
-      default:
-        return true;
-    }
-  });
-  
-  updateTripHistoryTable(filteredTrips);
-}
-
-// Replace the existing updateTripHistory function with this one
-function updateTripHistory() {
-  const searchHtml = `
-    <div class="mb-3 row">
-      <div class="col-md-3">
-        <select id="searchType" class="form-select">
-          <option value="all">Search All</option>
-          <option value="patientName">Patient Name</option>
-          <option value="ambulance">Ambulance</option>
-          <option value="driver">Driver</option>
-          <option value="nursingStaff">Nursing Staff</option>
-          <option value="origin">Origin</option>
-          <option value="destination">Destination</option>
-          <option value="date">Date</option>
-        </select>
-      </div>
-      <div class="col-md-9">
-        <input type="text" id="tripSearch" class="form-control" placeholder="Search trips..." oninput="searchTrips()">
-      </div>
-    </div>`;
-
-  document.getElementById('tripHistorySearch').innerHTML = searchHtml;
-  updateTripHistoryTable(trips);
-}
-
-function updateTripHistoryTable(tripsToShow) {
-  const tableHtml = `
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Patient</th>
-          <th>Origin</th>
-          <th>Destination</th>
-          <th>Ambulance</th>
-          <th>Driver</th>
-          <th>Total Charge</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${tripsToShow.map((trip, index) => `
-          <tr>
-            <td>${new Date(trip.date).toLocaleDateString()}</td>
-            <td>${trip.patientName}</td>
-            <td>${trip.origin}</td>
-            <td>${trip.destination}</td>
-            <td>${trip.ambulance}</td>
-            <td>${trip.driver}</td>
-            <td>₹${trip.totalCharge.toFixed(2)}</td>
-            <td>
-              <button class="btn btn-sm btn-info" onclick="showTripDetails(${index})">
-                View Details
-              </button>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>`;
-  
-  document.getElementById('tripHistoryTable').innerHTML = tableHtml;
-}
-
-function generatePatientDemographicsChart() {
-    const ctx = document.getElementById('patientDemographicsChart').getContext('2d');
-    const statusCounts = trips.reduce((counts, trip) => {
-        counts[trip.patientStatus] = (counts[trip.patientStatus] || 0) + 1;
-        return counts;
-    }, {});
-
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(statusCounts),
-            datasets: [{
-                data: Object.values(statusCounts),
-                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-            }]
-        }
-    });
-}
-
-function generateTripFrequencyChart() {
-    const ctx = document.getElementById('tripFrequencyChart').getContext('2d');
-    const tripDates = trips.map(trip => new Date(trip.date).toLocaleDateString());
-    const frequencyCounts = tripDates.reduce((counts, date) => {
-        counts[date] = (counts[date] || 0) + 1;
-        return counts;
-    }, {});
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(frequencyCounts),
-            datasets: [{
-                label: 'Number of Trips',
-                data: Object.values(frequencyCounts),
-                backgroundColor: '#36A2EB'
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Number of Trips'
-                    }
-                }
-            }
-        }
-    });
-}
-
 // Dashboard Functions
 function updateDashboard() {
     document.getElementById('totalTripsCount').textContent = trips.length;
-    
+
     const totalRevenue = trips.reduce((sum, trip) => sum + trip.totalCharge, 0);
     document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toFixed(2)}`;
-    
+
     const totalExpenses = trips.reduce((sum, trip) => sum + trip.totalExpenses, 0);
     document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toFixed(2)}`;
-    
+
     const netProfit = totalRevenue - totalExpenses;
     document.getElementById('netProfit').textContent = `₹${netProfit.toFixed(2)}`;
 
@@ -564,131 +348,23 @@ function updateDashboard() {
     generatePaymentTypeChart();
 }
 
-function generateRevenueTrendChart() {
-    const ctx = document.getElementById('revenueTrendChart').getContext('2d');
-    const labels = trips.map(trip => new Date(trip.date).toLocaleDateString());
-    const revenues = trips.map(trip => trip.totalCharge);
-
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Revenue',
-                data: revenues,
-                borderColor: '#36A2EB',
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Date'
-                    }
-                },
-                y: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Revenue (₹)'
-                    }
-                }
-            }
-        }
-    });
-}
-
-function generateAmbulanceUtilizationChart() {
-    const ctx = document.getElementById('ambulanceUtilizationChart').getContext('2d');
-    const ambulanceCounts = trips.reduce((counts, trip) => {
-        counts[trip.ambulance] = (counts[trip.ambulance] || 0) + 1;
-        return counts;
-    }, {});
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(ambulanceCounts),
-            datasets: [{
-                label: 'Number of Trips',
-                data: Object.values(ambulanceCounts),
-                backgroundColor: '#4BC0C0'
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Number of Trips'
-                    }
-                }
-            }
-        }
-    });
-}
-
-function generatePatientStatusChart() {
-    const ctx = document.getElementById('patientStatusChart').getContext('2d');
-    const statusCounts = trips.reduce((counts, trip) => {
-        counts[trip.patientStatus] = (counts[trip.patientStatus] || 0) + 1;
-        return counts;
-    }, {});
-
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(statusCounts),
-            datasets: [{
-                data: Object.values(statusCounts),
-                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-            }]
-        }
-    });
-}
-
-function generatePaymentTypeChart() {
-    const ctx = document.getElementById('paymentTypeChart').getContext('2d');
-    const paymentCounts = trips.reduce((counts, trip) => {
-        counts[trip.paymentType] = (counts[trip.paymentType] || 0) + 1;
-        return counts;
-    }, {});
-
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(paymentCounts),
-            datasets: [{
-                data: Object.values(paymentCounts),
-                backgroundColor: ['#FF6384', '#36A2EB']
-            }]
-        }
-    });
-}
-
-// Reports Functions
+// Report Functions
 function generateReport() {
     const reportType = document.getElementById('reportType').value;
     const timeFrame = document.getElementById('reportTimeFrame').value;
     let startDate, endDate;
-    
+
     if (timeFrame === 'custom') {
         startDate = new Date(document.getElementById('reportStartDate').value);
         endDate = new Date(document.getElementById('reportEndDate').value);
     } else {
         [startDate, endDate] = getDateRange(timeFrame);
     }
-    
+
     const filteredTrips = filterTripsByDateRange(trips, startDate, endDate);
-    
+
     let reportContent = '';
-    switch(reportType) {
+    switch (reportType) {
         case 'financial':
             reportContent = generateFinancialReport(filteredTrips);
             break;
@@ -699,15 +375,16 @@ function generateReport() {
             reportContent = generatePerformanceReport(filteredTrips);
             break;
     }
-    
+
     document.getElementById('reportContent').innerHTML = reportContent;
 }
 
+// Financial, operational, and performance report generation
 function generateFinancialReport(trips) {
     const totalRevenue = trips.reduce((sum, trip) => sum + trip.totalCharge, 0);
     const totalExpenses = trips.reduce((sum, trip) => sum + trip.totalExpenses, 0);
     const netProfit = totalRevenue - totalExpenses;
-    
+
     return `
         <h3>Financial Report</h3>
         <p><strong>Total Revenue:</strong> ₹${totalRevenue.toFixed(2)}</p>
@@ -724,7 +401,7 @@ function generateOperationalReport(trips) {
         counts[trip.ambulance] = (counts[trip.ambulance] || 0) + 1;
         return counts;
     }, {});
-    
+
     return `
         <h3>Operational Report</h3>
         <p><strong>Total Trips:</strong> ${totalTrips}</p>
@@ -743,7 +420,7 @@ function generatePerformanceReport(trips) {
     const averageRevenue = trips.reduce((sum, trip) => sum + trip.totalCharge, 0) / totalTrips;
     const averageExpenses = trips.reduce((sum, trip) => sum + trip.totalExpenses, 0) / totalTrips;
     const profitableTrips = trips.filter(trip => trip.totalCharge > trip.totalExpenses).length;
-    
+
     return `
         <h3>Performance Report</h3>
         <p><strong>Total Trips:</strong> ${totalTrips}</p>
@@ -753,6 +430,7 @@ function generatePerformanceReport(trips) {
     `;
 }
 
+// Download data as CSV, JSON, or Excel
 function downloadAllData(format) {
     let data;
     let fileName;
@@ -787,9 +465,9 @@ function convertToCSV(trips) {
     const headers = Object.keys(trips[0]).filter(key => key !== 'expenses');
     const expenseHeaders = Object.keys(trips[0].expenses);
     const allHeaders = [...headers, ...expenseHeaders.map(eh => `expense_${eh}`)];
-    
+
     let csv = allHeaders.join(',') + '\n';
-    
+
     for (const trip of trips) {
         const row = headers.map(header => {
             if (header === 'date') {
@@ -800,7 +478,7 @@ function convertToCSV(trips) {
         expenseHeaders.forEach(eh => row.push(trip.expenses[eh]));
         csv += row.join(',') + '\n';
     }
-    
+
     return csv;
 }
 
@@ -825,17 +503,18 @@ window.addEventListener('load', () => {
     updateTripHistory();
     generatePatientDemographicsChart();
     generateTripFrequencyChart();
-    
+
+    // Initialize date pickers
     flatpickr("#startDate", {});
     flatpickr("#endDate", {});
     flatpickr("#reportStartDate", {});
     flatpickr("#reportEndDate", {});
-    
+
     document.getElementById('analysisTimeFrame').addEventListener('change', function() {
         const customDateRange = document.getElementById('customDateRange');
         customDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
     });
-    
+
     document.getElementById('reportTimeFrame').addEventListener('change', function() {
         const reportCustomDateRange = document.getElementById('reportCustomDateRange');
         reportCustomDateRange.style.display = this.value === 'custom' ? 'block' : 'none';
